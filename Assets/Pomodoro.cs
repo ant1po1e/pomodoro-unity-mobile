@@ -13,6 +13,12 @@ public class PomodoroTimer : MonoBehaviour
     public Slider progressBar;
     public AudioClip alertSound;
 
+    [Header("Timer Settings")]
+    public int focusTime = 25;
+    public int shortBreakTime = 5;
+    public int longBreakTime = 15;
+    public int minute = 60;
+
     [Space]
     [Header("Popup Inputs")]
     public GameObject popupPanel;
@@ -24,6 +30,7 @@ public class PomodoroTimer : MonoBehaviour
     private AudioSource audioSource;
     private float timeLeft;
     private bool isWorkTime;
+    private bool manualChange = true;
     private int sessionCount;
     private bool timerRunning;
 
@@ -31,12 +38,12 @@ public class PomodoroTimer : MonoBehaviour
     {
         audioSource = GetComponent<AudioSource>();
         isWorkTime = true;
-        timeLeft = 25 * 60;
+        timeLeft = focusTime * minute;
         sessionCount = 0;
         timerRunning = false;
 
         sessionText.text = $"{sessionCount + 1} of 4 sessions";
-        progressBar.maxValue = 25 * 60;
+        progressBar.maxValue = focusTime * minute;
         progressBar.value = timeLeft;
 
         comboBoxSessionType.options.Clear();
@@ -66,22 +73,24 @@ public class PomodoroTimer : MonoBehaviour
                 if (sessionCount < 3)
                 {
                     MessageBox("Work time is over! Take a short break.");
+                    manualChange = false;
                     comboBoxSessionType.value = 1;
-
-                    timeLeft = 5 * 60;
+                    timeLeft = shortBreakTime * minute; 
                 }
                 else
                 {
                     MessageBox("Work time is over! Take a long break.");
+                    manualChange = false;
                     comboBoxSessionType.value = 2; 
-                    timeLeft = 15 * 60;
+                    timeLeft = longBreakTime * minute; 
                     sessionCount = -1;
                 }
             }
             else
             {
                 MessageBox("Break time is over! Back to work.");
-                timeLeft = 25 * 60;
+                manualChange = false;
+                timeLeft = focusTime * minute; 
                 comboBoxSessionType.value = 0; 
                 sessionCount++;
             }
@@ -90,9 +99,9 @@ public class PomodoroTimer : MonoBehaviour
             progressBar.maxValue = timeLeft;
             progressBar.value = timeLeft;
             timerRunning = true; 
-        }
-
-        sessionText.text = $"{sessionCount + 1} of 4 sessions";
+        
+            sessionText.text = $"{sessionCount + 1} of 4 sessions";
+        }    
     }
 
     private void UpdateTimeDisplay()
@@ -120,7 +129,7 @@ public class PomodoroTimer : MonoBehaviour
         timerRunning = false;
         playPauseText.text = "Start";
         isWorkTime = true;
-        timeLeft = 5 * 1;
+        timeLeft = focusTime * minute;
         sessionCount = 0;
         sessionText.text = $"{sessionCount + 1} of 4 sessions";
         UpdateTimeDisplay();
@@ -133,22 +142,22 @@ public class PomodoroTimer : MonoBehaviour
         StartCoroutine(TransitionQuit());
     }
 
-    private void ComboBoxSessionType_OnSelectedIndexChanged()
+    public void ComboBoxSessionType_OnSelectedIndexChanged()
     {
-        if (timerRunning == true)
+        if (manualChange == true)
         {
             switch (comboBoxSessionType.options[comboBoxSessionType.value].text)
             {
                 case "Focus":
-                    timeLeft = 25 * 60;
+                    timeLeft = focusTime * minute; 
                     isWorkTime = true;
                     break;
                 case "Short Break":
-                    timeLeft = 5 * 60;
+                    timeLeft = shortBreakTime * minute; 
                     isWorkTime = false;
                     break;
                 case "Long Break":
-                    timeLeft = 15 * 60;
+                    timeLeft = longBreakTime * minute; 
                     isWorkTime = false;
                     break;
             }
@@ -156,6 +165,7 @@ public class PomodoroTimer : MonoBehaviour
             progressBar.value = timeLeft;
             UpdateTimeDisplay();
         }
+        manualChange = true;
     }
 
     public void MessageBox(string message)
@@ -174,7 +184,7 @@ public class PomodoroTimer : MonoBehaviour
     IEnumerator TransitionQuit()
     {
         anim.SetTrigger("Transition");
-        yield return new WaitForSeconds(1f);
+        yield return new WaitForSeconds(2f);
         Application.Quit();
     }
 }
